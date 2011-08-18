@@ -1,6 +1,10 @@
 package pl.zdanek.android.mytrack;
 
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
+
+import pl.zdanek.android.mytrack.model.GeoPointSerializable;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
@@ -30,6 +34,7 @@ public class MyTrackMapActivity extends MapActivity {
     private static final int MENU_SET_MAP = 2;
 	private static final int MENU_CLEAR_MAP = 3;
 	private static final int MENU_ANIMATE_TO_LATEST = 4;
+	private static final String POINTS_LIST_BUNDLE_KEY = "POINTS_LIST_BUNDLE_KEY";
 	private MapView mapView;
 	private ZoomControls zoomControls;
     private MapController mapController;
@@ -135,6 +140,7 @@ public class MyTrackMapActivity extends MapActivity {
 		    this.mapController = this.mapView.getController();
 		    this.mapController.setZoom(10);
 		    
+		    
 //		    this.mapController.animateTo(lastKnownPoint);
 //		    getBuoyData(lastKnownPoint);
 	}
@@ -187,5 +193,21 @@ public class MyTrackMapActivity extends MapActivity {
 		return false;
 	}
 
+	@Override
+	protected void onSaveInstanceState(Bundle outState) {
+		Log.v(tag, "onSaveInstanceState");
+		super.onSaveInstanceState(outState);
+		outState.putSerializable(POINTS_LIST_BUNDLE_KEY, itemizedOverlay.getAllPointsAsSerializable());
+	}
 	
+	@Override
+	protected void onRestoreInstanceState(Bundle savedInstanceState) {
+		Log.v(tag, "onRestoreInstanceState");
+		super.onRestoreInstanceState(savedInstanceState);
+		
+		Object pointsList = savedInstanceState.get(POINTS_LIST_BUNDLE_KEY);
+		if (pointsList != null) {
+			itemizedOverlay.setAllPoints((ArrayList<GeoPointSerializable>) pointsList);
+		}
+	}
 }

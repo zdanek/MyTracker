@@ -1,10 +1,12 @@
 package pl.zdanek.android.mytrack;
 
+import java.io.Serializable;
 import java.util.ArrayList;
+
+import pl.zdanek.android.mytrack.model.GeoPointSerializable;
 
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
@@ -19,11 +21,14 @@ public class HelloItemizedOverlay extends ItemizedOverlay {
 
 	private ArrayList<OverlayItem> mOverlays = new ArrayList<OverlayItem>();
 	private Paint pathPaint;
+	private MapView mapView;
+	private Integer zoomLevel = -1;
 	private final static String tag = "HelloItemizedOverlay";
 	
 	public HelloItemizedOverlay(Drawable defaultMarker, MapView mapView) {
 		super(boundCenterBottom(defaultMarker));
 		
+		this.mapView = mapView;
 		preparePathPaint();
 		registerMapListener(mapView);
 	}
@@ -58,7 +63,7 @@ public class HelloItemizedOverlay extends ItemizedOverlay {
 	
 	@Override
 	public void draw(Canvas canvas, MapView mapView, boolean shadow) {
-		canvas.drawPosText("BZD", new float[]{10f, 10f, 20f, 10f, 30f, 10f}, new Paint(Paint.UNDERLINE_TEXT_FLAG));
+		canvas.drawPosText(zoomLevel.toString(), new float[]{10f, 10f, 15f, 10f, 20f, 10f, 25f, 10f}, new Paint(Paint.UNDERLINE_TEXT_FLAG));
 		
 		tryDrawWaypoints(canvas, mapView);
 		
@@ -74,7 +79,11 @@ public class HelloItemizedOverlay extends ItemizedOverlay {
 	}
 
 	private void drawWaypoints(Canvas canvas, MapView mapView) {
+		ArrayList<OverlayItem> mOverlays = this.mOverlays;
+		
 		if (mOverlays.size() > 1) {
+			processZoomLevel(mapView.getZoomLevel());
+			
 			int xs =Integer.MIN_VALUE, xe = Integer.MIN_VALUE, ys=0, ye=0;
 			Projection projection = mapView.getProjection();
 			for (OverlayItem oitem : mOverlays) {
@@ -95,9 +104,26 @@ public class HelloItemizedOverlay extends ItemizedOverlay {
 		}
 	}
 
+	private void processZoomLevel(int zoomLevel) {
+		if (this.zoomLevel == zoomLevel) {
+			return ;
+		}
+		
+		this.zoomLevel = zoomLevel;
+		
+		new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				newOverlay = new ArrayList<OverlayItem>();				
+			}
+		}).start();
+	}
+
 	public void clearPoints() {
 		mOverlays.clear();
 		populate();
+		mapView.invalidate();
 	}
 
 	public GeoPoint getLatestPoint() {
@@ -106,6 +132,30 @@ public class HelloItemizedOverlay extends ItemizedOverlay {
 		}
 		GeoPoint gpoint = mOverlays.get(mOverlays.size()-1).getPoint();
 		return new GeoPoint(gpoint.getLatitudeE6(), gpoint.getLongitudeE6());
+	}
+
+	public ArrayList<GeoPointSerializable> getAllPointsAsSerializable() {
+		ArrayList<GeoPointSerializable> list = new ArrayList<GeoPointSerializable>();
+		for (OverlayItem item : mOverlays) {
+			list.add(new GeoPointSerializable(item.getPoint()));
+		}
+		
+		return list;
+	}
+
+	public void setAllPoints(ArrayList<GeoPointSerializable> pointsList) {
+		mOverlays.clear();
+		
+		for (GeoPointSerializable gpoint : pointsList) {
+			OverlayItem oitem = new OverlayItem(gpoint.asGeoPoint(), "", "");
+			mOverlays.add(oitem);
+		}
+		
+		populate();
+	}
+	
+	private void setZoomFactor(int factor) {
+		zoomLevel = factor;
 	}
 
 }
