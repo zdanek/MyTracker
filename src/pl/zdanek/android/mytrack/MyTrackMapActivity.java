@@ -41,7 +41,7 @@ public class MyTrackMapActivity extends MapActivity {
 
     List<Overlay> mapOverlays;
     Drawable drawable;
-    HelloItemizedOverlay itemizedOverlay;
+    MyTrackItemizedOverlay itemizedOverlay;
     
 	
     private final LocationListener locationListenerRecenterMap = new LocationListener() {
@@ -85,7 +85,7 @@ public class MyTrackMapActivity extends MapActivity {
         
         mapOverlays = mapView.getOverlays();
         drawable = this.getResources().getDrawable(R.drawable.redpin);
-        itemizedOverlay = new HelloItemizedOverlay(drawable, mapView);
+        itemizedOverlay = new MyTrackItemizedOverlay(drawable, mapView);
         mapOverlays.add(itemizedOverlay);
         
 //        this.zoom = (ViewGroup) findViewById(R.id.zoom);
@@ -124,7 +124,7 @@ public class MyTrackMapActivity extends MapActivity {
 		if (this.locationProvider != null) {
 //		    this.locationManager.requestLocationUpdates(this.locationProvider.getName(), 3000, 185000,
 //		        this.locationListenerGetBuoyData);
-		    this.locationManager.requestLocationUpdates(this.locationProvider.getName(), 3000, 10,
+		    this.locationManager.requestLocationUpdates(this.locationProvider.getName(), 3000, MyTrackConstants.MARKER_DISTANCE_M,
 		        this.locationListenerRecenterMap);
 		} else {
 		    Log.e(tag, " NO LOCATION PROVIDER AVAILABLE");
@@ -139,6 +139,7 @@ public class MyTrackMapActivity extends MapActivity {
 //		    GeoPoint lastKnownPoint = getLastKnownPoint();
 		    this.mapController = this.mapView.getController();
 		    this.mapController.setZoom(10);
+	        itemizedOverlay.setZoomLevel(mapView.getZoomLevel());
 		    
 		    
 //		    this.mapController.animateTo(lastKnownPoint);
